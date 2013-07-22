@@ -1,4 +1,4 @@
-##UnTest Unity Testing Framework
+##UnTest Unity3D Testing Framework
 
 Because there is always one less unit-testing framework than there needs to be.
 
@@ -19,6 +19,7 @@ class MyTestSuite {
         m_instance = new MockFoo();
     }
 
+    // any exception is a test failure
     [Test]
     void GetResult_WithValidResult_GivesResult() {
         m_instance.SetResult(3);
