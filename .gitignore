@@ -1,0 +1,21 @@
+# based off http://forum.unity3d.com/threads/69609-Source-Control-w-Free-Unity-ignore-files-(Git-SVN-CVS)
+
+*.DS_Store
+
+Library/*
+Temp/*
+*.obj
+*.pidb
+*.suo
+*.userprefs
+*.csproj
+*.sln
+*.unityproj
+*.pidb
+*.userprefs
+
+# emacs temp files
+*~
+*#
+*#.meta
+        
