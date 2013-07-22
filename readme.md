@@ -28,3 +28,16 @@ class MyTestSuite {
 
 }
 ```
+
+###To Run
+
+From the command line: 
+
+    /path/to/unity -projectPath "path/to/project" 
+        -batchmode -logFile 
+        -executeMethod UnTest.TestRunner.RunTestsFromConsole 
+        -quit
+        
+Unfortunately only works if the Unity3D editor is closed.
+
+From the editor: _Assets->Tests->Run_
