@@ -27,7 +27,6 @@ class AssertFacts  {
 
         } finally {
 
-            Debug.Log("exception state: " + isExceptionThrown);
             if (isExceptionThrown == false) {
                 throw new Exception("no exception thrown from Assert.IsTrue(false)");
             }
