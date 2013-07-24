@@ -18,23 +18,26 @@ public class TestRunner {
 
     public static void RunTestsFromConsole() {
     
-        var failures = RunAllTests();
+        var results = RunAllTests();
 
-        if (failures.Any() == false) {
-            Debug.Log("All tests passed!");
+        string executedTestsMessage = results.TotalTestsRun.ToString() + " tests executed\n";
+
+        if (results.Failures.Any() == false) {
+            Debug.Log(executedTestsMessage + "All tests passed!");
             return;
         }
 
-        var failureOutput = CalculateFailureString(failures);
+        var failureOutput = CalculateFailureString(results.Failures);
         
         var consoleOutput = new System.Text.StringBuilder();
+        consoleOutput.Append(executedTestsMessage);
         
         foreach(var failureLine in failureOutput) {
             consoleOutput.Append(failureLine.Subject + "\n" + failureLine.Body);
         }
 
         Debug.LogError(consoleOutput.ToString());
-        Debug.LogError(failures.Count().ToString() + " test(s) failed\n");
+        Debug.LogError(results.Failures.Count().ToString() + " test(s) failed\n");
         
         EditorApplication.Exit(-1);
     }
@@ -42,9 +45,11 @@ public class TestRunner {
     [MenuItem("Assets/Tests/Run")]
     public static void RunTestsFromEditor() {
         
-        var failures = RunAllTests();
+        var results = RunAllTests();
 
-        if (failures.Any() == false) {
+        Debug.Log("Executed " + results.TotalTestsRun + " tests");
+
+        if (results.Failures.Any() == false) {
             Debug.Log("All tests passed");
 
         } else {
@@ -65,7 +70,7 @@ public class TestRunner {
                 }
             };
 
-            var failureOutput = CalculateFailureString(failures);
+            var failureOutput = CalculateFailureString(results.Failures);
             foreach(var failureMessage in failureOutput) {
 
                 var sanitisedSubject = tryTrimProjectRoot(failureMessage.Subject);
@@ -84,6 +89,11 @@ public class TestRunner {
         "Assembly-CSharp",
     };
 
+    private struct ExecutionResults {
+        public int TotalTestsRun;
+        public IEnumerable<TestFailure> Failures;
+    }
+
     private struct TestFailure {
         public Exception FailureException;
         public string SuiteName;
@@ -101,18 +111,22 @@ public class TestRunner {
     //////////////////////////////////////////////////
 
     // returns list of test failures
-    private static IEnumerable<TestFailure> RunAllTests() {
+    private static ExecutionResults RunAllTests() {
         
         var testableAssemblies = FindAllTestableAssemblies();
 
         var failures = new List<TestFailure>();
         
+        int totalTestsRun = 0;
         foreach(var testSuite in FindAllTestSuites(testableAssemblies)) {
             
-            RunTestsInSuite(testSuite, failures);
+            totalTestsRun += RunTestsInSuite(testSuite, failures);
         }
 
-        return failures;
+        return new ExecutionResults  {
+            TotalTestsRun = totalTestsRun,
+            Failures = failures
+        };
     }
 
 
@@ -132,20 +146,24 @@ public class TestRunner {
     }
 
     // returns number of found tests.
-    private static void RunTestsInSuite(Type testSuite, List<TestFailure> failureList) {
-        
-        var setupMethods = testSuite.GetMethods()
+    private static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList) {
+     
+        var methodSearch = BindingFlags.NonPublic | BindingFlags.Public
+            | BindingFlags.Static | BindingFlags.Instance;
+   
+        var setupMethods = testSuite.GetMethods(methodSearch)
             .Where(m => m.GetCustomAttributes(typeof(SuiteSetup), false).Length > 0)
             .ToArray();
 
-        var testMethods = testSuite.GetMethods()
+        var testMethods = testSuite.GetMethods(methodSearch)
             .Where(m => m.GetCustomAttributes(typeof(Test), false).Length > 0)
             .ToArray();
 
-        RunTestsInSuite(testSuite, failureList, setupMethods, testMethods);
+        return RunTestsInSuite(testSuite, failureList, setupMethods, testMethods);
     }
 
-    private static void RunTestsInSuite(Type testSuite, List<TestFailure> failureList, 
+    // returns number of found tests
+    private static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList, 
                                         IEnumerable<MethodBase> setupMethods,
                                         IEnumerable<MethodBase> testMethods) {
         
@@ -178,6 +196,8 @@ public class TestRunner {
             }
             
         }
+
+        return testMethods.Count();
     }
 
     private static StackFrame GetTestFrameFromCallStack(
