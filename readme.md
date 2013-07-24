@@ -2,6 +2,16 @@
 
 Because there is always one less unit-testing framework than there needs to be.
 
+###Installation
+
+Download the latest release from here:
+
+https://github.com/tenpn/untest/releases
+
+...And extract into your project.
+
+###Usage
+
 A test suite looks like this:
 
 ```C#
@@ -29,7 +39,7 @@ class MyTestSuite {
 }
 ```
 
-###To Run
+####To Run
 
 From the command line: 
 
