@@ -12,7 +12,9 @@ public static class Assert {
     }
 
     public static void IsEqual(object lhs, object rhs) {
-        IsTrue(lhs.Equals(rhs));
+        if (lhs.Equals(rhs) == false) {
+            throw new Exception("Fail: " + lhs + " != " + rhs);
+        }
     }
 }
 
