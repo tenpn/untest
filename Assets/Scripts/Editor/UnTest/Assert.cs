@@ -10,6 +10,10 @@ public static class Assert {
             throw new Exception("Assert failed");
         }
     }
+
+    public static void IsEqual(object lhs, object rhs) {
+        IsTrue(lhs.Equals(rhs));
+    }
 }
 
 }
