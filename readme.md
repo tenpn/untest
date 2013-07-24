@@ -33,7 +33,7 @@ class MyTestSuite {
     [Test]
     void GetResult_WithValidResult_GivesResult() {
         m_instance.SetResult(3);
-        Assert.Equal(m_instance.Result, 3); // there's no assert class yet!
+        Assert.IsTrue(m_instance.Result == 3); 
     }
 
 }
