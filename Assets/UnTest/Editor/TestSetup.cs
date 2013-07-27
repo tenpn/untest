@@ -14,7 +14,7 @@ namespace UnTest {
 
 // any function in a TestSuite with this attribute will be run before every test
 [AttributeUsage(AttributeTargets.Method)]
-public class SuiteSetup : Attribute {
+public class TestSetup : Attribute {
     
 }
 

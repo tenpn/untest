@@ -162,7 +162,7 @@ public class TestRunner {
             | BindingFlags.Static | BindingFlags.Instance;
    
         var setupMethods = testSuite.GetMethods(methodSearch)
-            .Where(m => m.GetCustomAttributes(typeof(SuiteSetup), false).Length > 0)
+            .Where(m => m.GetCustomAttributes(typeof(TestSetup), false).Length > 0)
             .ToArray();
 
         var testMethods = testSuite.GetMethods(methodSearch)
