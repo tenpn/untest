@@ -104,6 +104,83 @@ class AssertFacts  {
             Assert.IsTrue(isExceptionThrown);
         }
     }
+
+    [Test]
+    private void IsEqual_NullSecondParam_ThrowsException() {
+
+        var objA = new MockObject();
+
+        bool isExceptionThrown = false;
+        try {
+
+            Assert.IsEqual(objA, null);
+
+        } catch (Exception) {
+
+            isExceptionThrown = true;
+
+        } finally {
+
+            Assert.IsTrue(isExceptionThrown);
+        }
+    }
+
+    [Test]
+    private void IsEqual_NullSecondParam_ThrowsUnequalException() {
+
+        var objA = new MockObject();
+
+        try {
+
+            Assert.IsEqual(objA, null);
+
+        } catch (Exception e) {
+
+            Assert.IsEqual(e.GetType(), typeof(Exception));
+
+        } 
+    }
+
+
+    [Test]
+    private void IsEqual_NullFirstParam_ThrowsException() {
+        
+        var objB = new MockObject();
+
+        bool isExceptionThrown = false;
+        try {
+
+            Assert.IsEqual(null, objB);
+
+        } catch (Exception) {
+
+            isExceptionThrown = true;
+
+        } finally {
+
+            Assert.IsTrue(isExceptionThrown);
+        }
+    }
+
+
+    [Test]
+    private void IsEqual_NullFirstParam_ThrowsUnequalException() {
+        
+        var objB = new MockObject();
+
+        try {
+
+            Assert.IsEqual(null, objB);
+
+        } catch (Exception e) {
+
+            Assert.IsTrue(e.GetType() == typeof(Exception));
+
+        } 
+    }
+
+           
+           
 }
 
 }

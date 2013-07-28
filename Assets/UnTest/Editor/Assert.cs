@@ -22,7 +22,13 @@ public static class Assert {
     }
 
     public static void IsEqual(object lhs, object rhs) {
-        if (lhs.Equals(rhs) == false) {
+
+        if (lhs == null) {
+            if (rhs != null) {
+                throw new Exception("Fail: " + lhs + " != " + rhs);
+            }
+
+        } else if (lhs.Equals(rhs) == false) {
             throw new Exception("Fail: " + lhs + " != " + rhs);
         }
     }
