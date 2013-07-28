@@ -8,8 +8,6 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-using UnityEditor;
-using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,75 +19,7 @@ using Debug = UnityEngine.Debug;
 
 namespace UnTest {
 
-
-// runs all unity tests it can find. run from console like this:
-// /path/to/unity -projectPath "path/to/project" -batchmode -logFile -executeMethod TestRunner.RunTestsFromConsole -quit
-// also run from Assets/Tests/Run menu.
 public class TestRunner {
-
-    public static void RunTestsFromConsole() {
-    
-        var results = RunAllTests();
-
-        string executedTestsMessage = results.TotalTestsRun.ToString() + " tests executed\n";
-
-        if (results.Failures.Any() == false) {
-            Debug.Log(executedTestsMessage + "All tests passed!");
-            return;
-        }
-
-        var failureOutput = CalculateFailureString(results.Failures);
-        
-        var consoleOutput = new System.Text.StringBuilder();
-        consoleOutput.Append(executedTestsMessage);
-        
-        foreach(var failureLine in failureOutput) {
-            consoleOutput.Append(failureLine.Subject + "\n" + failureLine.Body);
-        }
-
-        Debug.LogError(consoleOutput.ToString());
-        Debug.LogError(results.Failures.Count().ToString() + " test(s) failed\n");
-        
-        EditorApplication.Exit(-1);
-    }
-
-    [MenuItem("Assets/Tests/Run")]
-    public static void RunTestsFromEditor() {
-        
-        var results = RunAllTests();
-
-        Debug.Log("Executed " + results.TotalTestsRun + " tests");
-
-        if (results.Failures.Any() == false) {
-            Debug.Log("All tests passed");
-
-        } else {
-            
-            // file names have a full path, but that takes up a lot of log window.
-            // unity can still function if we take the project as root.
-            string assetsRoot = Application.dataPath; // /path/to/proj/assets
-            string projectRoot = assetsRoot.Substring(0, 
-                                                      assetsRoot.Length - "/Assets".Length);
-            int rootToTrim = projectRoot.Length;            
-            Func<string,string> tryTrimProjectRoot = msg => { 
-
-                if (msg.StartsWith(projectRoot)) {
-                    return msg.Substring(rootToTrim);
-                    
-                } else {
-                    return msg;
-                }
-            };
-
-            var failureOutput = CalculateFailureString(results.Failures);
-            foreach(var failureMessage in failureOutput) {
-
-                var sanitisedSubject = tryTrimProjectRoot(failureMessage.Subject);
-
-                Debug.LogError(sanitisedSubject + "\n" + failureMessage.Body);
-            }
-        }
-    }
 
     public struct TestFailure {
         public Exception FailureException;
@@ -99,6 +29,17 @@ public class TestRunner {
         public int LineNumber;
         public int ColumnNumber;
     }
+
+    public struct ExecutionResults {
+        public int TotalTestsRun;
+        public IEnumerable<TestFailure> Failures;
+    }
+
+    public struct TestFailureMessage {
+        public string Subject;
+        public string Body;
+    }
+
 
     // returns number of found tests.
     public static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList) {
@@ -164,30 +105,8 @@ public class TestRunner {
 
     }
     
-    
-    //////////////////////////////////////////////////
-
-    private static string[] s_testableAssemblies = new string [] { 
-        "Assembly-UnityScript-Editor-firstpass",
-        "Assembly-UnityScript-firstpass",
-        "Assembly-CSharp-Editor",
-        "Assembly-CSharp",
-    };
-
-    private struct ExecutionResults {
-        public int TotalTestsRun;
-        public IEnumerable<TestFailure> Failures;
-    }
-
-    private struct TestFailureMessage {
-        public string Subject;
-        public string Body;
-    }
-
-    //////////////////////////////////////////////////
-
     // returns list of test failures
-    private static ExecutionResults RunAllTests() {
+    public static ExecutionResults RunAllTests() {
         
         var testableAssemblies = FindAllTestableAssemblies();
 
@@ -205,6 +124,41 @@ public class TestRunner {
         };
     }
 
+    public static IEnumerable<TestFailureMessage> CalculateFailureString(
+        IEnumerable<TestFailure> failures) {
+
+        yield return new TestFailureMessage  {
+            Subject = failures.Count().ToString() + " test failure(s)"
+        };            
+
+        foreach(var failure in failures) {
+            var failureHeadline = string.Format(
+                "{0}({1},{2}): error {3}.{4} failed:",
+                new System.Object[] { 
+                    failure.FileName,
+                    failure.LineNumber,
+                    failure.ColumnNumber,
+                    failure.SuiteName,
+                    failure.TestName,
+                });
+            yield return new TestFailureMessage {
+                Subject = failureHeadline,
+                Body = failure.FailureException.ToString()
+            };
+        }
+    }
+
+    
+    //////////////////////////////////////////////////
+
+    private static string[] s_testableAssemblies = new string [] { 
+        "Assembly-UnityScript-Editor-firstpass",
+        "Assembly-UnityScript-firstpass",
+        "Assembly-CSharp-Editor",
+        "Assembly-CSharp",
+    };
+
+    //////////////////////////////////////////////////
 
     private static IEnumerable<Assembly> FindAllTestableAssemblies() {
         
@@ -228,29 +182,6 @@ public class TestRunner {
             .FirstOrDefault(frame => frame.GetMethod() == testFunction);
     }
 
-    private static IEnumerable<TestFailureMessage> CalculateFailureString(
-        IEnumerable<TestFailure> failures) {
-
-        yield return new TestFailureMessage  {
-            Subject = failures.Count().ToString() + " test failure(s)"
-        };            
-
-        foreach(var failure in failures) {
-            var failureHeadline = string.Format(
-                "{0}({1},{2}): error {3}.{4} failed:",
-                new System.Object[] { 
-                    failure.FileName,
-                    failure.LineNumber,
-                    failure.ColumnNumber,
-                    failure.SuiteName,
-                    failure.TestName,
-                });
-            yield return new TestFailureMessage {
-                Subject = failureHeadline,
-                Body = failure.FailureException.ToString()
-            };
-        }
-    }
 }
 
 }
