@@ -31,6 +31,8 @@ public class ConsoleTestRunner {
         var results = TestRunner.RunAllTestsInAssembly(assembly);
 
         TestRunner.OutputTestResults(results, Console.WriteLine);
+
+        Environment.Exit(-1);
     }
 
 }
