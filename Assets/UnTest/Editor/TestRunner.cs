@@ -16,6 +16,7 @@ using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
 
+using Object = System.Object;
 using Debug = UnityEngine.Debug;
 
 namespace UnTest {
@@ -89,6 +90,80 @@ public class TestRunner {
             }
         }
     }
+
+    public struct TestFailure {
+        public Exception FailureException;
+        public string SuiteName;
+        public string TestName;
+        public string FileName;
+        public int LineNumber;
+        public int ColumnNumber;
+    }
+
+    // returns number of found tests.
+    public static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList) {
+     
+        var methodSearch = BindingFlags.NonPublic | BindingFlags.Public
+            | BindingFlags.Static | BindingFlags.Instance;
+   
+        // setups found in whole hierarchy
+        var setupMethods = testSuite.GetMethods(methodSearch | BindingFlags.FlattenHierarchy)
+                .Where(m => m.GetCustomAttributes(typeof(TestSetup), false).Length > 0);
+
+        var testMethods = testSuite.GetMethods(methodSearch | BindingFlags.DeclaredOnly)
+            .Where(m => m.GetCustomAttributes(typeof(Test), false).Length > 0)
+            .ToArray();
+
+        return RunTestsInSuite(testSuite, failureList, setupMethods, testMethods);
+    }
+
+    // returns number of found tests
+    public static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList, 
+                                      IEnumerable<MethodInfo> setupMethods,
+                                      IEnumerable<MethodBase> testMethods) {
+        
+        var instance = Activator.CreateInstance(testSuite);
+
+        return RunTestsInSuite(instance, failureList, setupMethods, testMethods);
+    }
+
+    // returns number of found tests
+    public static int RunTestsInSuite(Object suiteInstance, List<TestFailure> failureList, 
+                                      IEnumerable<MethodInfo> setupMethods,
+                                      IEnumerable<MethodBase> testMethods) {
+        
+        foreach(var test in testMethods) {
+
+            foreach(var setupMethod in setupMethods) {
+                setupMethod.Invoke(suiteInstance, null);
+            }
+
+            try {
+                test.Invoke(suiteInstance, null);
+
+            } catch (Exception e) {
+
+                var stackTrace = new StackTrace(e.InnerException, true);
+                var callStack = stackTrace.GetFrames();
+
+                var testFrame = GetTestFrameFromCallStack(callStack, test);
+
+                failureList.Add(new TestFailure  {
+                    FailureException = e.InnerException,
+                    SuiteName = suiteInstance.GetType().Name,
+                    TestName = test.Name,
+                    FileName = testFrame.GetFileName(),
+                    LineNumber = testFrame.GetFileLineNumber(),
+                    ColumnNumber = testFrame.GetFileColumnNumber(),
+                });
+            }
+            
+        }
+
+        return testMethods.Count();
+
+    }
+    
     
     //////////////////////////////////////////////////
 
@@ -102,15 +177,6 @@ public class TestRunner {
     private struct ExecutionResults {
         public int TotalTestsRun;
         public IEnumerable<TestFailure> Failures;
-    }
-
-    private struct TestFailure {
-        public Exception FailureException;
-        public string SuiteName;
-        public string TestName;
-        public string FileName;
-        public int LineNumber;
-        public int ColumnNumber;
     }
 
     private struct TestFailureMessage {
@@ -153,61 +219,6 @@ public class TestRunner {
         return testableAssemblies
             .SelectMany(assembly => assembly.GetTypes())
             .Where(type => type.GetCustomAttributes(typeof(TestSuite), true).Length > 0);
-    }
-
-    // returns number of found tests.
-    private static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList) {
-     
-        var methodSearch = BindingFlags.NonPublic | BindingFlags.Public
-            | BindingFlags.Static | BindingFlags.Instance;
-   
-        var setupMethods = testSuite.GetMethods(methodSearch)
-            .Where(m => m.GetCustomAttributes(typeof(TestSetup), false).Length > 0)
-            .ToArray();
-
-        var testMethods = testSuite.GetMethods(methodSearch)
-            .Where(m => m.GetCustomAttributes(typeof(Test), false).Length > 0)
-            .ToArray();
-
-        return RunTestsInSuite(testSuite, failureList, setupMethods, testMethods);
-    }
-
-    // returns number of found tests
-    private static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList, 
-                                        IEnumerable<MethodBase> setupMethods,
-                                        IEnumerable<MethodBase> testMethods) {
-        
-        var instance = Activator.CreateInstance(testSuite);
-
-        foreach(var test in testMethods) {
-
-            foreach(var setupMethod in setupMethods) {
-                setupMethod.Invoke(instance, null);
-            }
-
-            try {
-                test.Invoke(instance, null);
-
-            } catch (Exception e) {
-
-                var stackTrace = new StackTrace(e.InnerException, true);
-                var callStack = stackTrace.GetFrames();
-
-                var testFrame = GetTestFrameFromCallStack(callStack, test);
-
-                failureList.Add(new TestFailure  {
-                    FailureException = e.InnerException,
-                    SuiteName = testSuite.Name,
-                    TestName = test.Name,
-                    FileName = testFrame.GetFileName(),
-                    LineNumber = testFrame.GetFileLineNumber(),
-                    ColumnNumber = testFrame.GetFileColumnNumber(),
-                });
-            }
-            
-        }
-
-        return testMethods.Count();
     }
 
     private static StackFrame GetTestFrameFromCallStack(
