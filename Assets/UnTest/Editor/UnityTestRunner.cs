@@ -25,26 +25,9 @@ public class UnityTestRunner {
     
         var results = TestRunner.RunAllTests();
 
-        string executedTestsMessage = results.TotalTestsRun.ToString() + " tests executed\n";
-
-        if (results.Failures.Any() == false) {
-            Debug.Log(executedTestsMessage + "All tests passed!");
-            return;
+        if (TestRunner.OutputTestResults(results, Debug.LogError) == false) {
+            EditorApplication.Exit(-1);
         }
-
-        var failureOutput = TestRunner.CalculateFailureString(results.Failures);
-        
-        var consoleOutput = new System.Text.StringBuilder();
-        consoleOutput.Append(executedTestsMessage);
-        
-        foreach(var failureLine in failureOutput) {
-            consoleOutput.Append(failureLine.Subject + "\n" + failureLine.Body);
-        }
-
-        Debug.LogError(consoleOutput.ToString());
-        Debug.LogError(results.Failures.Count().ToString() + " test(s) failed\n");
-        
-        EditorApplication.Exit(-1);
     }
 
     [MenuItem("Assets/Tests/Run")]
