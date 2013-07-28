@@ -1,2 +1,2 @@
--*.csproj
--*.sln
+!*.csproj
+!*.sln
