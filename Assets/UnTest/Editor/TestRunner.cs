@@ -151,6 +151,23 @@ public class TestRunner {
         };
     }
 
+    public static ExecutionResults RunAllTestsInAssembly(
+        Assembly assemblyToTest) {
+        
+        var failures = new List<TestFailure>();
+        
+        int totalTestsRun = 0;
+        foreach(var testSuite in FindAllTestSuites(assemblyToTest)) {
+            
+            totalTestsRun += RunTestsInSuite(testSuite, failures);
+        }
+
+        return new ExecutionResults  {
+            TotalTestsRun = totalTestsRun,
+            Failures = failures
+        };
+    }
+
     public static IEnumerable<TestFailureMessage> CalculateFailureString(
         IEnumerable<TestFailure> failures) {
 
@@ -197,10 +214,16 @@ public class TestRunner {
     private static IEnumerable<Type> FindAllTestSuites(
         IEnumerable<Assembly> testableAssemblies) {
 
-        return testableAssemblies
-            .SelectMany(assembly => assembly.GetTypes())
+        return testableAssemblies.SelectMany(assembly => FindAllTestSuites(assembly));
+    }
+
+    private static IEnumerable<Type> FindAllTestSuites(
+        Assembly assemblyToTest) {
+    
+        return assemblyToTest.GetTypes()
             .Where(type => type.GetCustomAttributes(typeof(TestSuite), true).Length > 0);
     }
+    
 
     private static StackFrame GetTestFrameFromCallStack(
         IEnumerable<StackFrame> callStack, MethodBase testFunction) {
