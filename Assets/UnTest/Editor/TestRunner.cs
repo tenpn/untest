@@ -40,6 +40,33 @@ public class TestRunner {
         public string Body;
     }
 
+    // returns true if all tests passed
+    public static bool OutputTestResults(
+        ExecutionResults failures, 
+        Action<string> writeLine) {
+
+        string executedTestsMessage = failures.TotalTestsRun.ToString() 
+            + " tests executed\n";
+
+        if (failures.Failures.Any() == false) {
+            writeLine(executedTestsMessage + "All tests passed!");
+            return true;
+        }
+
+        var failureOutput = TestRunner.CalculateFailureString(failures.Failures);
+        
+        var consoleOutput = new System.Text.StringBuilder();
+        consoleOutput.Append(executedTestsMessage);
+        
+        foreach(var failureLine in failureOutput) {
+            consoleOutput.Append(failureLine.Subject + "\n" + failureLine.Body);
+        }
+
+        writeLine(consoleOutput.ToString());
+        writeLine(failures.Failures.Count().ToString() + " test(s) failed\n");
+
+        return false;
+    }
 
     // returns number of found tests.
     public static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList) {
