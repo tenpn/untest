@@ -15,7 +15,6 @@ using System.Reflection;
 using System.Diagnostics;
 
 using Object = System.Object;
-using Debug = UnityEngine.Debug;
 
 namespace UnTest {
 
