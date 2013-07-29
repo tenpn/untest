@@ -139,6 +139,11 @@ public class TestRunner {
 
     }
 
+    public static IEnumerable<Assembly> FilterAssemblies(IEnumerable<Assembly> assembliesToFilter) {
+        return assembliesToFilter.Where(assembly => s_testableAssemblies.Any(
+            testableAssembly => assembly.FullName.Contains(testableAssembly)));
+    }
+
     public static ExecutionResults RunAllTestsInAssemblies(
         IEnumerable<Assembly> assembliesToTest) {
         
@@ -195,9 +200,7 @@ public class TestRunner {
 
     private static IEnumerable<Assembly> FindAllTestableAssemblies() {
         
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .Where(assembly => s_testableAssemblies.Any(
-                       testableAssembly => assembly.FullName.Contains(testableAssembly)));
+        return FilterAssemblies(AppDomain.CurrentDomain.GetAssemblies());
     }
 
     private static IEnumerable<Type> FindAllTestSuites(
