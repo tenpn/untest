@@ -1,4 +1,4 @@
-##UnTest Unity3D Testing Framework v0.2.0
+##UnTest Unity3D Testing Framework v0.3.0
 
 Because there is always one less unit-testing framework than there needs to be.
 
