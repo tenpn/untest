@@ -8,8 +8,6 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-using UnityEditor;
-using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,79 +15,10 @@ using System.Reflection;
 using System.Diagnostics;
 
 using Object = System.Object;
-using Debug = UnityEngine.Debug;
 
 namespace UnTest {
 
-
-// runs all unity tests it can find. run from console like this:
-// /path/to/unity -projectPath "path/to/project" -batchmode -logFile -executeMethod TestRunner.RunTestsFromConsole -quit
-// also run from Assets/Tests/Run menu.
 public class TestRunner {
-
-    public static void RunTestsFromConsole() {
-    
-        var results = RunAllTests();
-
-        string executedTestsMessage = results.TotalTestsRun.ToString() + " tests executed\n";
-
-        if (results.Failures.Any() == false) {
-            Debug.Log(executedTestsMessage + "All tests passed!");
-            return;
-        }
-
-        var failureOutput = CalculateFailureString(results.Failures);
-        
-        var consoleOutput = new System.Text.StringBuilder();
-        consoleOutput.Append(executedTestsMessage);
-        
-        foreach(var failureLine in failureOutput) {
-            consoleOutput.Append(failureLine.Subject + "\n" + failureLine.Body);
-        }
-
-        Debug.LogError(consoleOutput.ToString());
-        Debug.LogError(results.Failures.Count().ToString() + " test(s) failed\n");
-        
-        EditorApplication.Exit(-1);
-    }
-
-    [MenuItem("Assets/Tests/Run")]
-    public static void RunTestsFromEditor() {
-        
-        var results = RunAllTests();
-
-        Debug.Log("Executed " + results.TotalTestsRun + " tests");
-
-        if (results.Failures.Any() == false) {
-            Debug.Log("All tests passed");
-
-        } else {
-            
-            // file names have a full path, but that takes up a lot of log window.
-            // unity can still function if we take the project as root.
-            string assetsRoot = Application.dataPath; // /path/to/proj/assets
-            string projectRoot = assetsRoot.Substring(0, 
-                                                      assetsRoot.Length - "/Assets".Length);
-            int rootToTrim = projectRoot.Length;            
-            Func<string,string> tryTrimProjectRoot = msg => { 
-
-                if (msg.StartsWith(projectRoot)) {
-                    return msg.Substring(rootToTrim);
-                    
-                } else {
-                    return msg;
-                }
-            };
-
-            var failureOutput = CalculateFailureString(results.Failures);
-            foreach(var failureMessage in failureOutput) {
-
-                var sanitisedSubject = tryTrimProjectRoot(failureMessage.Subject);
-
-                Debug.LogError(sanitisedSubject + "\n" + failureMessage.Body);
-            }
-        }
-    }
 
     public struct TestFailure {
         public Exception FailureException;
@@ -100,6 +29,44 @@ public class TestRunner {
         public int ColumnNumber;
     }
 
+    public struct ExecutionResults {
+        public int TotalTestsRun;
+        public IEnumerable<TestFailure> Failures;
+    }
+
+    public struct TestFailureMessage {
+        public string Subject;
+        public string Body;
+    }
+
+    // returns true if all tests passed
+    public static bool OutputTestResults(
+        ExecutionResults failures, 
+        Action<string> writeLine) {
+
+        string executedTestsMessage = failures.TotalTestsRun.ToString() 
+            + " tests executed\n";
+
+        if (failures.Failures.Any() == false) {
+            writeLine(executedTestsMessage + "All tests passed!");
+            return true;
+        }
+
+        var failureOutput = TestRunner.CalculateFailureString(failures.Failures);
+        
+        var consoleOutput = new System.Text.StringBuilder();
+        consoleOutput.Append(executedTestsMessage);
+        
+        foreach(var failureLine in failureOutput) {
+            consoleOutput.Append(failureLine.Subject + "\n" + failureLine.Body);
+        }
+
+        writeLine(consoleOutput.ToString());
+        writeLine(failures.Failures.Count().ToString() + " test(s) failed\n");
+
+        return false;
+    }
+
     // returns number of found tests.
     public static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList) {
      
@@ -108,10 +75,10 @@ public class TestRunner {
    
         // setups found in whole hierarchy
         var setupMethods = testSuite.GetMethods(methodSearch | BindingFlags.FlattenHierarchy)
-                .Where(m => m.GetCustomAttributes(typeof(TestSetup), false).Length > 0);
+            .Where(m => m.GetCustomAttributes(false).Any(att => att.GetType().Name == typeof(TestSetup).Name));
 
         var testMethods = testSuite.GetMethods(methodSearch | BindingFlags.DeclaredOnly)
-            .Where(m => m.GetCustomAttributes(typeof(Test), false).Length > 0)
+            .Where(m => m.GetCustomAttributes(false).Any(att => att.GetType().Name == typeof(Test).Name))
             .ToArray();
 
         return RunTestsInSuite(testSuite, failureList, setupMethods, testMethods);
@@ -164,71 +131,38 @@ public class TestRunner {
 
     }
     
-    
-    //////////////////////////////////////////////////
-
-    private static string[] s_testableAssemblies = new string [] { 
-        "Assembly-UnityScript-Editor-firstpass",
-        "Assembly-UnityScript-firstpass",
-        "Assembly-CSharp-Editor",
-        "Assembly-CSharp",
-    };
-
-    private struct ExecutionResults {
-        public int TotalTestsRun;
-        public IEnumerable<TestFailure> Failures;
-    }
-
-    private struct TestFailureMessage {
-        public string Subject;
-        public string Body;
-    }
-
-    //////////////////////////////////////////////////
-
     // returns list of test failures
-    private static ExecutionResults RunAllTests() {
+    public static ExecutionResults RunAllTests() {
         
         var testableAssemblies = FindAllTestableAssemblies();
+		return RunAllTestsInAssemblies (testableAssemblies);
 
-        var failures = new List<TestFailure>();
+    }
+
+    public static IEnumerable<Assembly> FilterAssemblies(IEnumerable<Assembly> assembliesToFilter) {
+        return assembliesToFilter.Where(assembly => s_testableAssemblies.Any(
+            testableAssembly => assembly.FullName.Contains(testableAssembly)));
+    }
+
+    public static ExecutionResults RunAllTestsInAssemblies(
+        IEnumerable<Assembly> assembliesToTest) {
         
-        int totalTestsRun = 0;
-        foreach(var testSuite in FindAllTestSuites(testableAssemblies)) {
-            
-            totalTestsRun += RunTestsInSuite(testSuite, failures);
-        }
+		
+		var failures = new List<TestFailure>();
 
-        return new ExecutionResults  {
-            TotalTestsRun = totalTestsRun,
-            Failures = failures
-        };
+		int totalTestsRun = 0;
+		foreach(var testSuite in FindAllTestSuites(assembliesToTest)) {
+
+			totalTestsRun += RunTestsInSuite(testSuite, failures);
+		}
+
+		return new ExecutionResults  {
+			TotalTestsRun = totalTestsRun,
+			Failures = failures
+		};
     }
 
-
-    private static IEnumerable<Assembly> FindAllTestableAssemblies() {
-        
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .Where(assembly => s_testableAssemblies.Any(
-                       testableAssembly => assembly.FullName.Contains(testableAssembly)));
-    }
-
-    private static IEnumerable<Type> FindAllTestSuites(
-        IEnumerable<Assembly> testableAssemblies) {
-
-        return testableAssemblies
-            .SelectMany(assembly => assembly.GetTypes())
-            .Where(type => type.GetCustomAttributes(typeof(TestSuite), true).Length > 0);
-    }
-
-    private static StackFrame GetTestFrameFromCallStack(
-        IEnumerable<StackFrame> callStack, MethodBase testFunction) {
-
-        return callStack.Reverse()
-            .FirstOrDefault(frame => frame.GetMethod() == testFunction);
-    }
-
-    private static IEnumerable<TestFailureMessage> CalculateFailureString(
+    public static IEnumerable<TestFailureMessage> CalculateFailureString(
         IEnumerable<TestFailure> failures) {
 
         yield return new TestFailureMessage  {
@@ -251,6 +185,51 @@ public class TestRunner {
             };
         }
     }
+
+    
+    //////////////////////////////////////////////////
+
+    private static string[] s_testableAssemblies = new string [] { 
+        "Assembly-UnityScript-Editor-firstpass",
+        "Assembly-UnityScript-firstpass",
+        "Assembly-CSharp-Editor",
+        "Assembly-CSharp",
+    };
+
+    //////////////////////////////////////////////////
+
+    private static IEnumerable<Assembly> FindAllTestableAssemblies() {
+        
+        return FilterAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+    }
+
+    private static IEnumerable<Type> FindAllTestSuites(
+        IEnumerable<Assembly> testableAssemblies) {
+
+        return testableAssemblies.SelectMany(assembly => FindAllTestSuites(assembly));
+    }
+
+    private static IEnumerable<Type> FindAllTestSuites(
+        Assembly assemblyToTest) {
+    
+        var allTypes = assemblyToTest.GetTypes();
+        foreach(var type in allTypes) {
+            var allAttributes = type.GetCustomAttributes(false);
+            if(allAttributes.Any(attribute => attribute.GetType().Name == typeof(TestSuite).Name) == false) {
+                continue;
+            }
+            yield return type;
+        }
+    }
+    
+
+    private static StackFrame GetTestFrameFromCallStack(
+        IEnumerable<StackFrame> callStack, MethodBase testFunction) {
+
+        return callStack.Reverse()
+            .FirstOrDefault(frame => frame.GetMethod() == testFunction);
+    }
+
 }
 
 }
