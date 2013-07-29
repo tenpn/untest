@@ -32,7 +32,7 @@ public class ConsoleTestRunner {
 			
         Console.WriteLine("running tests on assembly dir " + assemblyDirPath);
 
-        var results = TestRunner.RunAllTestsInAssemblies(assemblies);
+        var results = TestRunner.RunAllTestsInAssemblies(TestRunner.FilterAssemblies(assemblies));
 
         TestRunner.OutputTestResults(results, Console.WriteLine);
 
