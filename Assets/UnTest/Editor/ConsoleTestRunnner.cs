@@ -34,9 +34,9 @@ public class ConsoleTestRunner {
 
         var results = TestRunner.RunAllTestsInAssemblies(TestRunner.FilterAssemblies(assemblies));
 
-        TestRunner.OutputTestResults(results, Console.WriteLine);
-
-        Environment.Exit(-1);
+        if(TestRunner.OutputTestResults(results, Console.WriteLine) == false) {
+            Environment.Exit(-1);
+        }
     }
 
 }
