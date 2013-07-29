@@ -75,10 +75,10 @@ public class TestRunner {
    
         // setups found in whole hierarchy
         var setupMethods = testSuite.GetMethods(methodSearch | BindingFlags.FlattenHierarchy)
-                .Where(m => m.GetCustomAttributes(typeof(TestSetup), false).Length > 0);
+            .Where(m => m.GetCustomAttributes(false).Any(att => att.GetType().Name == typeof(TestSetup).Name));
 
         var testMethods = testSuite.GetMethods(methodSearch | BindingFlags.DeclaredOnly)
-            .Where(m => m.GetCustomAttributes(typeof(Test), false).Length > 0)
+            .Where(m => m.GetCustomAttributes(false).Any(att => att.GetType().Name == typeof(Test).Name))
             .ToArray();
 
         return RunTestsInSuite(testSuite, failureList, setupMethods, testMethods);
@@ -135,36 +135,26 @@ public class TestRunner {
     public static ExecutionResults RunAllTests() {
         
         var testableAssemblies = FindAllTestableAssemblies();
+		return RunAllTestsInAssemblies (testableAssemblies);
 
-        var failures = new List<TestFailure>();
-        
-        int totalTestsRun = 0;
-        foreach(var testSuite in FindAllTestSuites(testableAssemblies)) {
-            
-            totalTestsRun += RunTestsInSuite(testSuite, failures);
-        }
-
-        return new ExecutionResults  {
-            TotalTestsRun = totalTestsRun,
-            Failures = failures
-        };
     }
 
-    public static ExecutionResults RunAllTestsInAssembly(
-        Assembly assemblyToTest) {
+    public static ExecutionResults RunAllTestsInAssemblies(
+        IEnumerable<Assembly> assembliesToTest) {
         
-        var failures = new List<TestFailure>();
-        
-        int totalTestsRun = 0;
-        foreach(var testSuite in FindAllTestSuites(assemblyToTest)) {
-            
-            totalTestsRun += RunTestsInSuite(testSuite, failures);
-        }
+		
+		var failures = new List<TestFailure>();
 
-        return new ExecutionResults  {
-            TotalTestsRun = totalTestsRun,
-            Failures = failures
-        };
+		int totalTestsRun = 0;
+		foreach(var testSuite in FindAllTestSuites(assembliesToTest)) {
+
+			totalTestsRun += RunTestsInSuite(testSuite, failures);
+		}
+
+		return new ExecutionResults  {
+			TotalTestsRun = totalTestsRun,
+			Failures = failures
+		};
     }
 
     public static IEnumerable<TestFailureMessage> CalculateFailureString(
@@ -219,8 +209,14 @@ public class TestRunner {
     private static IEnumerable<Type> FindAllTestSuites(
         Assembly assemblyToTest) {
     
-        return assemblyToTest.GetTypes()
-            .Where(type => type.GetCustomAttributes(typeof(TestSuite), true).Length > 0);
+        var allTypes = assemblyToTest.GetTypes();
+        foreach(var type in allTypes) {
+            var allAttributes = type.GetCustomAttributes(false);
+            if(allAttributes.Any(attribute => attribute.GetType().Name == typeof(TestSuite).Name) == false) {
+                continue;
+            }
+            yield return type;
+        }
     }
     
 
