@@ -11,10 +11,11 @@ You should have received a copy of the GNU General Public License along with thi
 using System;
 using System.Reflection;
 using System.Linq;
+using System.IO;
 
 namespace UnTest {
     
-// finds assembly from command line, loads, runs tests
+// finds all assemblies in dir from command line, loads, runs tests
 public class ConsoleTestRunner {
     
     static void Main(string[] args)
@@ -22,13 +23,16 @@ public class ConsoleTestRunner {
         RunTestsOnAssemblyAtPath(args[0]);
     }
 
-    public static void RunTestsOnAssemblyAtPath(string assemblyPath) {
-        
-        Console.WriteLine("running tests on assembly " + assemblyPath);
+    public static void RunTestsOnAssemblyAtPath(string assemblyDirPath) {
+   
+		var assemblyDir = new DirectoryInfo (assemblyDirPath);
 
-        var assembly = Assembly.LoadFrom(assemblyPath);
+		var assemblies = assemblyDir.GetFiles("*.dll")
+				.Select (assemblyPath => Assembly.LoadFrom (assemblyPath.FullName));
+			
+        Console.WriteLine("running tests on assembly dir " + assemblyDirPath);
 
-        var results = TestRunner.RunAllTestsInAssembly(assembly);
+        var results = TestRunner.RunAllTestsInAssemblies(assemblies);
 
         TestRunner.OutputTestResults(results, Console.WriteLine);
 
