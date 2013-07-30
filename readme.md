@@ -43,14 +43,22 @@ class MyTestSuite {
 
 From the command line: 
 
+You have two options on the command line. The Unity3D application can deal with added/removed files, but is quite slow, the output is quite verbose and it won't work if the Unity3D editor is currently open. This is the syntax: 
+
     /path/to/unity -projectPath "path/to/project" 
         -batchmode -logFile 
-        -executeMethod UnTest.TestRunner.RunTestsFromConsole 
+        -executeMethod UnTest.UnityTestRunner.RunTestsFromConsole 
         -quit
         
-Unfortunately only works if the Unity3D editor is closed.
+Alternatively you can use the .Net UnTest-Console tool to find and execute tests in your built Unity3D DLLs. This is the command:
 
-From the editor: _Assets->Tests->Run_
+    mono --debug /path/to/project/Assets/UnTest/Editor/UnTest-Console/bin/Release/UnTest-Console.exe path/to/DLL/folder
+    
+The `--debug` flag allows the tool to report on line numbers. Your DLL folder is in path/to/project/Libary/ScriptAssemblies if built with the editor, or path/to/project/Temp/bin/debug if built with monodevelop/mdtool. 
+
+As a convenience, Untest/Editor/RunTests.sh will, when given the path to your project SLN, build the assemblies using mdtool then run the tests with UnTest-Console.
+        
+The tests can also be run from the editor. To do this, select _Run_ from the _Assets->Tests_ menu.
 
 ---
 

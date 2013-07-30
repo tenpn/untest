@@ -7,5 +7,5 @@ set -e
 /Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool build $1
 
 SLNDIR=$(dirname $1)
-mono $SLNDIR/Assets/UnTest/Editor/UnTest-Console/bin/Release/UnTest-Console.exe $SLNDIR/Temp/bin/Debug
+mono --debug $SLNDIR/Assets/UnTest/Editor/UnTest-Console/bin/Release/UnTest-Console.exe $SLNDIR/Temp/bin/Debug
 
