@@ -154,8 +154,22 @@ class AssertFacts  {
     [Test]
     private void IsEqualSequence_UnEqualSequences_AssertFails() {
         
-        Assert.ThatThrowsException(() => { 
+         Assert.ThatThrowsException(() => { 
                 Assert.IsEqualSequence(new int[] { 1, 2 }, new int[] { 2, 3 });
+            }, typeof(Exception));
+    }
+
+    [Test]
+    private void IsFalse_FalseParam_DoesNothing() {
+        
+        Assert.IsFalse(false);
+    }
+
+    [Test]
+    private void IsFalse_TrueParam_AssertFails() {
+        
+        Assert.ThatThrowsException(() => { 
+                Assert.IsFalse(true);
             }, typeof(Exception));
     }
 }

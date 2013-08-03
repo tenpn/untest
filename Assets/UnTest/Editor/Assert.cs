@@ -23,6 +23,12 @@ public static class Assert {
         }
     }
 
+    public static void IsFalse(bool condition) {
+        if (condition) {
+            throw new Exception("Assert.IsFalse failed");
+        }
+    }
+
     public static void IsEqual(object lhs, object rhs) {
 
         if (lhs == null) {
