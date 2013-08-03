@@ -231,10 +231,21 @@ public class TestRunner {
     
         var allTypes = assemblyToTest.GetTypes();
         foreach(var type in allTypes) {
-            var allAttributes = type.GetCustomAttributes(false);
-            if(allAttributes.Any(attribute => attribute.GetType().Name == typeof(TestSuite).Name) == false) {
+
+            try {
+
+                var allAttributes = type.GetCustomAttributes(false);
+                if(allAttributes
+                   .Any(attribute => attribute.GetType().Name == typeof(TestSuite).Name) 
+                     == false) {
+
+                    continue;
+                }
+                
+            } catch (MissingMethodException) {
                 continue;
             }
+
             yield return type;
         }
     }
