@@ -9,6 +9,8 @@ You should have received a copy of the GNU General Public License along with thi
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace UnTest {
     
@@ -49,6 +51,19 @@ public static class Assert {
                                     + exceptionType.ToString());
             }
         }
+    }
+
+    public static void IsEqualSequence<T>(IEnumerable<T> lhs, IEnumerable<T> rhs) {
+        
+        if (lhs == null) {
+            if (rhs == null) {
+                return;
+            }
+        } else if (lhs.SequenceEqual(rhs)) {
+            return;
+        }
+
+        throw new Exception("Unequal sequences");
     }
 }
 

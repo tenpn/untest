@@ -122,7 +122,42 @@ class AssertFacts  {
             Assert.IsTrue(threwException);
         }
     }
-           
+
+    [Test]
+    private void IsEqualSequence_NullParams_DoesNothing() {
+        
+        Assert.IsEqualSequence<int>(null, null);
+    }
+
+    [Test]
+    private void IsEqualSequence_IdenticalEmptySequences_DoesNothing() {
+        
+        Assert.IsEqualSequence(new int[] {  },
+                               new int[] {  });
+    }
+
+    [Test]
+    private void IsEqualSequence_IdenticalSequences_DoesNothing() {
+        
+        Assert.IsEqualSequence(new int[] { 1, 2, 3 },
+                               new int[] { 1, 2, 3 });
+    }
+
+    [Test]
+    private void IsEqualSequence_NullFirstSequenceEmptySecond_AssertFails() {
+        
+        Assert.ThatThrowsException(() => { 
+                Assert.IsEqualSequence(null, new int[] { });
+            }, typeof(Exception));
+    }
+
+    [Test]
+    private void IsEqualSequence_UnEqualSequences_AssertFails() {
+        
+        Assert.ThatThrowsException(() => { 
+                Assert.IsEqualSequence(new int[] { 1, 2 }, new int[] { 2, 3 });
+            }, typeof(Exception));
+    }
 }
 
 }
