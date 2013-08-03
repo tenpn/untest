@@ -100,6 +100,31 @@ public static class Assert {
         throw new Exception(comp.ToString());
 
     }
+
+    public static void IsEmptySequence<T>(IEnumerable<T> seq) {
+        
+        if (seq != null && seq.Any() == false) {
+            return;
+        }
+
+        var comp = new System.Text.StringBuilder();
+
+        comp.AppendFormat("Assert.IsEmptySequence<{0}>() failed\n",
+                          typeof(T));
+
+        if (seq == null) {
+            comp.Append("(null sequence)\n");
+
+        } else {
+            int index = 0;
+            foreach(var val in seq) {
+                comp.AppendFormat("{0}: {1}", index, val);
+                ++index;
+            }
+        }
+
+        throw new Exception("sequence was not empty:\n");
+    }
 }
 
 }

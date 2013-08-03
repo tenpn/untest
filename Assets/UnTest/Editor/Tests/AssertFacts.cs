@@ -172,6 +172,25 @@ class AssertFacts  {
                 Assert.IsFalse(true);
             }, typeof(Exception));
     }
+
+    [Test]
+    private void IsEmptySequence_EmptySequence_DoesNothing() {
+        Assert.IsEmptySequence(new int[] { });
+    }
+
+    [Test]
+    private void IsEmptySequence_NullParam_AssertFails() {
+        Assert.ThatThrowsException(() => { 
+                Assert.IsEmptySequence<int>(null);
+            }, typeof(Exception));
+    }
+
+    [Test]
+    private void IsEmptySequence_NonEmptySequence_AssertFails() {
+        Assert.ThatThrowsException(() => { 
+                Assert.IsEmptySequence(new int[] { 1 });
+            }, typeof(Exception));
+    }
 }
 
 }
