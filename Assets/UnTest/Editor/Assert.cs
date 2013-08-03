@@ -32,6 +32,24 @@ public static class Assert {
             throw new Exception("Fail: " + lhs + " != " + rhs);
         }
     }
+
+    public static void ThatThrowsException(Action lambda, Type exceptionType) {
+
+        bool isThrown = false;
+
+        try {
+            lambda();
+
+        } catch(Exception e) {
+            isThrown = e.GetType() == exceptionType;
+
+        } finally {
+            if (isThrown == false) {
+                throw new Exception("Did not get exception of type " 
+                                    + exceptionType.ToString());
+            }
+        }
+    }
 }
 
 }

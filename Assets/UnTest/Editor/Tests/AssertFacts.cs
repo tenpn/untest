@@ -178,7 +178,42 @@ class AssertFacts  {
         } 
     }
 
-           
+    [Test]
+    private void ThatThrowsException_ThowingLambda_DoesNothing() {
+        
+        Assert.ThatThrowsException(() => { throw new Exception(); },
+                                   typeof(Exception));
+    }
+
+    [Test]
+    private void ThatThrowsException_NonThrowingLambda_ThrowsException() {
+        
+        bool threwException = false;
+        try {
+            Assert.ThatThrowsException(() => { },
+                                       typeof(Exception));
+        } catch(Exception) { 
+            threwException = true;
+
+        } finally {
+            Assert.IsTrue(threwException);
+        }
+    }
+
+    [Test]
+    private void ThatThrowsException_ThrowsWrongException_ThrowsException() {
+        
+        bool threwException = false;
+        try {
+            Assert.ThatThrowsException(() => { throw new ArgumentException(); },
+                                       typeof(NotImplementedException));
+        } catch(Exception) { 
+            threwException = true;
+
+        } finally {
+            Assert.IsTrue(threwException);
+        }
+    }
            
 }
 
