@@ -73,9 +73,26 @@ public class TestRunner {
         var methodSearch = BindingFlags.NonPublic | BindingFlags.Public
             | BindingFlags.Static | BindingFlags.Instance;
    
-        // setups found in whole hierarchy
-        var setupMethods = testSuite.GetMethods(methodSearch | BindingFlags.FlattenHierarchy)
-            .Where(m => m.GetCustomAttributes(false).Any(att => att.GetType().Name == typeof(TestSetup).Name));
+        // setups: find everything in current type,
+        // and private setups in bases. also any non-private setup in bases
+        // that aren't virtual.
+
+        var setupMethods = new List<MethodInfo>();
+        setupMethods
+            .AddRange(testSuite.GetMethods(methodSearch)
+                      .Where(m => m.GetCustomAttributes(false).Any(
+                                 att => att.GetType().Name == typeof(TestSetup).Name)));
+
+        var chainType = testSuite.BaseType;
+        while(chainType != null) {
+            var chainSetups = chainType.GetMethods(
+                BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)
+                .Where(m => m.GetCustomAttributes(false).Any(
+                           att => att.GetType().Name == typeof(TestSetup).Name))
+                .Where(m => m.IsVirtual == false);
+            setupMethods.AddRange(chainSetups);
+            chainType = chainType.BaseType;
+        }
 
         var testMethods = testSuite.GetMethods(methodSearch | BindingFlags.DeclaredOnly)
             .Where(m => m.GetCustomAttributes(false).Any(att => att.GetType().Name == typeof(Test).Name))
