@@ -25,7 +25,7 @@ public static class Assert {
 
         if (lhs == null) {
             if (rhs != null) {
-                throw new Exception("Fail: " + lhs + " != " + rhs);
+                throw new Exception("Fail: NULL != " + rhs);
             }
 
         } else if (lhs.Equals(rhs) == false) {
