@@ -181,7 +181,7 @@ public class TestRunner {
                 });
             yield return new TestFailureMessage {
                 Subject = failureHeadline,
-                Body = failure.FailureException.ToString()
+                Body = failure.FailureException.ToString() + "\n"
             };
         }
     }
