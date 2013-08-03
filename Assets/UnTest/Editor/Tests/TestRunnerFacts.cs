@@ -120,6 +120,125 @@ namespace UnTest.Tests {
             Assert.IsEqual(MockBaseTestSuite.BaseSetupRuns, 0);
         }
 
+        [TestSuite]
+        class PrivateBaseSetup {
+            
+            [TestSuite]
+            private class BaseSuiteWithPrivateSetup {
+            
+                public static int s_privateBaseSetupRunCount = 0;
+
+                [TestSetup]
+                void PrivateBaseSetup() {
+                    ++s_privateBaseSetupRunCount;
+                }
+            }
+
+            [TestSuite]
+            private class DerivedSuiteWithPrivateSetup : BaseSuiteWithPrivateSetup {
+                
+                public static int s_privateDerivedSetupRunCount = 0;
+
+                [TestSetup]
+                void PrivateDerivedSetup() {
+                    ++s_privateDerivedSetupRunCount;
+                }
+
+                [Test]
+                void SampleTest() {
+                }
+            }
+
+            List<TestRunner.TestFailure> m_failures;
+
+            [TestSetup]
+            void Setup() {
+                BaseSuiteWithPrivateSetup.s_privateBaseSetupRunCount = 0;
+                DerivedSuiteWithPrivateSetup.s_privateDerivedSetupRunCount = 0;
+                m_failures = new List<TestRunner.TestFailure>();
+            }
+
+            [Test]
+            void RunTestsInSuite_SuiteBaseWithPrivateSetup_RunsDerivedSetup() {
+                
+                TestRunner.RunTestsInSuite(typeof(DerivedSuiteWithPrivateSetup),
+                                           m_failures);
+
+                Assert.IsEqual(DerivedSuiteWithPrivateSetup.s_privateDerivedSetupRunCount,
+                               1);
+            }
+
+            [Test]
+            void RunTestsInSuite_SuiteBaseWithPrivateSetup_RunsBaseSetup() {
+                TestRunner.RunTestsInSuite(typeof(DerivedSuiteWithPrivateSetup),
+                                           m_failures);
+
+                Assert.IsEqual(BaseSuiteWithPrivateSetup.s_privateBaseSetupRunCount,
+                               1);
+            }
+
+        }
+
+        [TestSuite]
+        class ProtectedVirtualBaseSetup {
+            
+            [TestSuite]
+            private class BaseSuiteWithProtectedVirtualSetup {
+            
+                public static int s_baseSetupRunCount = 0;
+
+                [TestSetup]
+                protected virtual void Setup() {
+                    ++s_baseSetupRunCount;
+                }
+            }
+
+            [TestSuite]
+            private class DerivedSuiteWithOverridenSetup : BaseSuiteWithProtectedVirtualSetup {
+                
+                public static int s_derivedSetupRunCount = 0;
+
+                [TestSetup]
+                protected override void Setup() {
+                    base.Setup();
+                    ++s_derivedSetupRunCount;
+                }
+
+                [Test]
+                void SampleTest() {
+                }
+            }
+
+            List<TestRunner.TestFailure> m_failures;
+
+            [TestSetup]
+            void Setup() {
+                BaseSuiteWithProtectedVirtualSetup.s_baseSetupRunCount = 0;
+                DerivedSuiteWithOverridenSetup.s_derivedSetupRunCount = 0;
+                m_failures = new List<TestRunner.TestFailure>();
+            }
+
+            [Test]
+            void RunTestsInSuite_SuiteBaseWithProtectedVirtualSetup_RunsDerivedSetup() {
+                
+                TestRunner.RunTestsInSuite(typeof(DerivedSuiteWithOverridenSetup),
+                                           m_failures);
+
+                Assert.IsEqual(DerivedSuiteWithOverridenSetup.s_derivedSetupRunCount,
+                               1);
+            }
+
+            [Test]
+            void RunTestsInSuite_SuiteBaseWithPrivateSetup_RunsBaseSetup() {
+                TestRunner.RunTestsInSuite(typeof(DerivedSuiteWithOverridenSetup),
+                                           m_failures);
+
+                Assert.IsEqual(BaseSuiteWithProtectedVirtualSetup.s_baseSetupRunCount,
+                               1);
+            }
+
+        }
+
     }
 
 }

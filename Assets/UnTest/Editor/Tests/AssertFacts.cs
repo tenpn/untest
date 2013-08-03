@@ -24,22 +24,9 @@ class AssertFacts  {
 
     [Test]
     private void IsTrue_False_ThrowsException() {
-        
-        bool isExceptionThrown = false;
-        try {
 
-            Assert.IsTrue(false);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            if (isExceptionThrown == false) {
-                throw new Exception("no exception thrown from Assert.IsTrue(false)");
-            }
-        }
+        Assert.ThatThrowsException(() => { Assert.IsTrue(false); },
+                                   typeof(Exception));
     }
 
     [Test]
@@ -68,19 +55,8 @@ class AssertFacts  {
     [Test]
     private void IsEqual_DifferentValues_ThrowsException() {
 
-        bool isExceptionThrown = false;
-        try {
-
-            Assert.IsEqual(1,2);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            Assert.IsTrue(isExceptionThrown);
-        }
+        Assert.ThatThrowsException(() => { Assert.IsEqual(1,2); },
+                                   typeof(Exception));
     }
 
     [Test]
@@ -89,19 +65,8 @@ class AssertFacts  {
         var objA = new MockObject();
         var objB = new MockObject();
 
-        bool isExceptionThrown = false;
-        try {
-
-            Assert.IsEqual(objA, objB);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            Assert.IsTrue(isExceptionThrown);
-        }
+        Assert.ThatThrowsException(() => { Assert.IsEqual(objA, objB); },
+                                   typeof(Exception));
     }
 
     [Test]
@@ -109,77 +74,123 @@ class AssertFacts  {
 
         var objA = new MockObject();
 
-        bool isExceptionThrown = false;
-        try {
-
-            Assert.IsEqual(objA, null);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            Assert.IsTrue(isExceptionThrown);
-        }
+        Assert.ThatThrowsException(() => { Assert.IsEqual(objA, null); },
+                                   typeof(Exception));
     }
-
-    [Test]
-    private void IsEqual_NullSecondParam_ThrowsUnequalException() {
-
-        var objA = new MockObject();
-
-        try {
-
-            Assert.IsEqual(objA, null);
-
-        } catch (Exception e) {
-
-            Assert.IsEqual(e.GetType(), typeof(Exception));
-
-        } 
-    }
-
 
     [Test]
     private void IsEqual_NullFirstParam_ThrowsException() {
         
         var objB = new MockObject();
+        Assert.ThatThrowsException(() => { Assert.IsEqual(null, objB); },
+                                   typeof(Exception));
+    }
 
-        bool isExceptionThrown = false;
+    [Test]
+    private void ThatThrowsException_ThowingLambda_DoesNothing() {
+        
+        Assert.ThatThrowsException(() => { throw new Exception(); },
+                                   typeof(Exception));
+    }
+
+    [Test]
+    private void ThatThrowsException_NonThrowingLambda_ThrowsException() {
+        
+        bool threwException = false;
         try {
-
-            Assert.IsEqual(null, objB);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
+            Assert.ThatThrowsException(() => { },
+                                       typeof(Exception));
+        } catch(Exception) { 
+            threwException = true;
 
         } finally {
-
-            Assert.IsTrue(isExceptionThrown);
+            Assert.IsTrue(threwException);
         }
     }
 
-
     [Test]
-    private void IsEqual_NullFirstParam_ThrowsUnequalException() {
+    private void ThatThrowsException_ThrowsWrongException_ThrowsException() {
         
-        var objB = new MockObject();
-
+        bool threwException = false;
         try {
+            Assert.ThatThrowsException(() => { throw new ArgumentException(); },
+                                       typeof(NotImplementedException));
+        } catch(Exception) { 
+            threwException = true;
 
-            Assert.IsEqual(null, objB);
-
-        } catch (Exception e) {
-
-            Assert.IsTrue(e.GetType() == typeof(Exception));
-
-        } 
+        } finally {
+            Assert.IsTrue(threwException);
+        }
     }
 
-           
-           
+    [Test]
+    private void IsEqualSequence_NullParams_DoesNothing() {
+        
+        Assert.IsEqualSequence<int>(null, null);
+    }
+
+    [Test]
+    private void IsEqualSequence_IdenticalEmptySequences_DoesNothing() {
+        
+        Assert.IsEqualSequence(new int[] {  },
+                               new int[] {  });
+    }
+
+    [Test]
+    private void IsEqualSequence_IdenticalSequences_DoesNothing() {
+        
+        Assert.IsEqualSequence(new int[] { 1, 2, 3 },
+                               new int[] { 1, 2, 3 });
+    }
+
+    [Test]
+    private void IsEqualSequence_NullFirstSequenceEmptySecond_AssertFails() {
+        
+        Assert.ThatThrowsException(() => { 
+                Assert.IsEqualSequence(null, new int[] { });
+            }, typeof(Exception));
+    }
+
+    [Test]
+    private void IsEqualSequence_UnEqualSequences_AssertFails() {
+        
+         Assert.ThatThrowsException(() => { 
+                Assert.IsEqualSequence(new int[] { 1, 2 }, new int[] { 2, 3 });
+            }, typeof(Exception));
+    }
+
+    [Test]
+    private void IsFalse_FalseParam_DoesNothing() {
+        
+        Assert.IsFalse(false);
+    }
+
+    [Test]
+    private void IsFalse_TrueParam_AssertFails() {
+        
+        Assert.ThatThrowsException(() => { 
+                Assert.IsFalse(true);
+            }, typeof(Exception));
+    }
+
+    [Test]
+    private void IsEmptySequence_EmptySequence_DoesNothing() {
+        Assert.IsEmptySequence(new int[] { });
+    }
+
+    [Test]
+    private void IsEmptySequence_NullParam_AssertFails() {
+        Assert.ThatThrowsException(() => { 
+                Assert.IsEmptySequence<int>(null);
+            }, typeof(Exception));
+    }
+
+    [Test]
+    private void IsEmptySequence_NonEmptySequence_AssertFails() {
+        Assert.ThatThrowsException(() => { 
+                Assert.IsEmptySequence(new int[] { 1 });
+            }, typeof(Exception));
+    }
 }
 
 }
