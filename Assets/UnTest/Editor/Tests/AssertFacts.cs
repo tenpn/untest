@@ -24,22 +24,9 @@ class AssertFacts  {
 
     [Test]
     private void IsTrue_False_ThrowsException() {
-        
-        bool isExceptionThrown = false;
-        try {
 
-            Assert.IsTrue(false);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            if (isExceptionThrown == false) {
-                throw new Exception("no exception thrown from Assert.IsTrue(false)");
-            }
-        }
+        Assert.ThatThrowsException(() => { Assert.IsTrue(false); },
+                                   typeof(Exception));
     }
 
     [Test]
@@ -68,19 +55,8 @@ class AssertFacts  {
     [Test]
     private void IsEqual_DifferentValues_ThrowsException() {
 
-        bool isExceptionThrown = false;
-        try {
-
-            Assert.IsEqual(1,2);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            Assert.IsTrue(isExceptionThrown);
-        }
+        Assert.ThatThrowsException(() => { Assert.IsEqual(1,2); },
+                                   typeof(Exception));
     }
 
     [Test]
@@ -89,19 +65,8 @@ class AssertFacts  {
         var objA = new MockObject();
         var objB = new MockObject();
 
-        bool isExceptionThrown = false;
-        try {
-
-            Assert.IsEqual(objA, objB);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            Assert.IsTrue(isExceptionThrown);
-        }
+        Assert.ThatThrowsException(() => { Assert.IsEqual(objA, objB); },
+                                   typeof(Exception));
     }
 
     [Test]
@@ -109,73 +74,16 @@ class AssertFacts  {
 
         var objA = new MockObject();
 
-        bool isExceptionThrown = false;
-        try {
-
-            Assert.IsEqual(objA, null);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            Assert.IsTrue(isExceptionThrown);
-        }
+        Assert.ThatThrowsException(() => { Assert.IsEqual(objA, null); },
+                                   typeof(Exception));
     }
-
-    [Test]
-    private void IsEqual_NullSecondParam_ThrowsUnequalException() {
-
-        var objA = new MockObject();
-
-        try {
-
-            Assert.IsEqual(objA, null);
-
-        } catch (Exception e) {
-
-            Assert.IsEqual(e.GetType(), typeof(Exception));
-
-        } 
-    }
-
 
     [Test]
     private void IsEqual_NullFirstParam_ThrowsException() {
         
         var objB = new MockObject();
-
-        bool isExceptionThrown = false;
-        try {
-
-            Assert.IsEqual(null, objB);
-
-        } catch (Exception) {
-
-            isExceptionThrown = true;
-
-        } finally {
-
-            Assert.IsTrue(isExceptionThrown);
-        }
-    }
-
-
-    [Test]
-    private void IsEqual_NullFirstParam_ThrowsUnequalException() {
-        
-        var objB = new MockObject();
-
-        try {
-
-            Assert.IsEqual(null, objB);
-
-        } catch (Exception e) {
-
-            Assert.IsTrue(e.GetType() == typeof(Exception));
-
-        } 
+        Assert.ThatThrowsException(() => { Assert.IsEqual(null, objB); },
+                                   typeof(Exception));
     }
 
     [Test]
