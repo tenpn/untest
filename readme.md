@@ -39,6 +39,8 @@ class MyTestSuite {
 }
 ```
 
+You should put them below an editor folder of your project so they're not shipped in builds.
+
 ####To Run
 
 From the command line: 
