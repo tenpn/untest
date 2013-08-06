@@ -1,4 +1,4 @@
-##UnTest Unity3D Testing Framework v0.3.1
+##UnTest Unity3D Testing Framework v0.4.0
 
 Because there is always one less unit-testing framework than there needs to be.
 
@@ -39,35 +39,30 @@ class MyTestSuite {
 }
 ```
 
+You should put them below an editor folder of your project so they're not shipped in builds.
+
 ####To Run
 
 From the command line: 
 
+You have two options on the command line. The Unity3D application can deal with added/removed files, but is quite slow, the output is quite verbose and it won't work if the Unity3D editor is currently open. This is the syntax: 
+
     /path/to/unity -projectPath "path/to/project" 
         -batchmode -logFile 
-        -executeMethod UnTest.TestRunner.RunTestsFromConsole 
+        -executeMethod UnTest.UnityTestRunner.RunTestsFromConsole 
         -quit
         
-Unfortunately only works if the Unity3D editor is closed.
+Alternatively you can use the .Net UnTest-Console tool to find and execute tests in your built Unity3D DLLs. This is the command:
 
-From the editor: _Assets->Tests->Run_
+    mono --debug /path/to/project/Assets/UnTest/Editor/UnTest-Console/bin/Release/UnTest-Console.exe path/to/DLL/folder
+    
+The `--debug` flag allows the tool to report on line numbers. Your DLL folder is in path/to/project/Libary/ScriptAssemblies if built with the editor, or path/to/project/Temp/bin/debug if built with monodevelop/mdtool. 
+
+As a convenience, Untest/Editor/RunTests.sh will, when given the path to your project SLN, build the assemblies using mdtool then run the tests with UnTest-Console.
+        
+The tests can also be run from the editor. To do this, select _Run_ from the _Assets->Tests_ menu.
 
 ---
 
-UnTest Unity3D Unit Testing Framework
-Copyright (C) 2013 Andrew Fray
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
+Copyright(c) 2013 Andrew Fray
+Licensed under the MIT license. See the license.txt file for full details.
