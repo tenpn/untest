@@ -24,7 +24,7 @@ class MyTestSuite {
     private MockFoo m_instance;
 
     // called before every test        
-    [SuiteSetup]
+    [TestSetup]
     void DoSetup() {
         m_instance = new MockFoo();
     }
