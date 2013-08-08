@@ -36,6 +36,18 @@ public static class Assert {
         }
     }
 
+    public static void IsNotEqual(object lhs, object rhs) {
+
+        if (lhs == null) {
+            if (rhs == null) {
+                throw new Exception("Fail: NULL == NULL");
+            }
+
+        } else if (lhs.Equals(rhs) == true) {
+            throw new Exception("Fail: " + lhs + " == " + rhs);
+        }
+    }
+
     public static void ThatThrowsException(Action lambda, Type exceptionType) {
 
         bool isThrown = false;
