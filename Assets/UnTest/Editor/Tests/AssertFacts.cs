@@ -80,8 +80,66 @@ class AssertFacts  {
         Assert.ThatThrowsException(() => { Assert.IsEqual(null, objB); },
                                    typeof(Exception));
     }
+    	
+    [Test]
+    private void IsNotEqual_DifferentStrings_DoesNothing() {
+        Assert.IsNotEqual("bob", "notbob");
+    }
 
     [Test]
+    private void IsNotEqual_DifferentInts_DoesNothing() {
+        Assert.IsNotEqual(3, 4);
+    }
+
+    [Test]
+    private void IsNotEqual_DifferentFloats_DoesNothing() {
+        Assert.IsNotEqual(3f, 4f);
+    }
+
+    [Test]
+    private void IsNotEqual_DifferentObjects_DoesNothing() {
+        var boxed1 = new MockEquatable<int>(1);
+        var boxed2 = new MockEquatable<int>(2);
+        
+        Assert.IsNotEqual(boxed1, boxed2);
+    }
+
+    [Test]
+    private void IsNotEqual_EqualValues_ThrowsException() {
+
+        Assert.ThatThrowsException(() => { Assert.IsNotEqual(1,1); },
+                                   typeof(Exception));
+    }
+
+    [Test]
+    private void IsNotEqual_EqualObjects_ThrowsException() {
+
+        var boxed1 = new MockEquatable<int>(1);
+        var boxed2 = new MockEquatable<int>(1);
+
+        Assert.ThatThrowsException(() => { Assert.IsNotEqual(boxed1, boxed2); },
+                                   typeof(Exception));
+    }
+
+    [Test]
+    private void IsNotEqual_NullSecondParam_DoesNothing() {
+        var objA = new MockObject();
+		Assert.IsNotEqual(objA, null);
+    }
+
+    [Test]
+    private void IsNotEqual_NullFirstParam_DoesNothing() {
+        var objB = new MockObject();
+		Assert.IsNotEqual(null, objB);
+    }
+
+    [Test]
+    private void IsNotEqual_NullBothParam_ThrowsException() {
+        Assert.ThatThrowsException(() => { Assert.IsNotEqual(null, null); },
+                                   typeof(Exception));
+    }
+
+	[Test]
     private void ThatThrowsException_ThowingLambda_DoesNothing() {
         
         Assert.ThatThrowsException(() => { throw new Exception(); },
