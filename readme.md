@@ -23,10 +23,16 @@ class MyTestSuite {
 
     private MockFoo m_instance;
 
-    // called before every test        
+    // called before every test
     [TestSetup]
     void DoSetup() {
         m_instance = new MockFoo();
+    }
+
+    // called after every test
+    [TestTeardown]
+    void DoTeardown() {
+        m_instance.Cleanup();
     }
 
     // any exception is a test failure
