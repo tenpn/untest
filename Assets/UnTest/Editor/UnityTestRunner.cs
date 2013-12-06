@@ -25,7 +25,7 @@ public class UnityTestRunner {
         }
     }
 
-    [MenuItem("Assets/Tests/Run")]
+    [MenuItem("Assets/Tests/Run #%r")]
     public static void RunTestsFromEditor() {
         
         var results = TestRunner.RunAllTests();
