@@ -1,3 +1,5 @@
+**WOAH THERE**: If you're on unity 4.x+, we recommend Unity's first-party testing tools over UnTest. https://www.assetstore.unity3d.com/#/content/13802
+
 ##UnTest Unity3D Testing Framework v0.4.0
 
 Because there is always one less unit-testing framework than there needs to be.
