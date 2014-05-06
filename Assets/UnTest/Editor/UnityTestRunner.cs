@@ -25,11 +25,38 @@ public class UnityTestRunner {
         }
     }
 
-    [MenuItem("Assets/Tests/Run #%r")]
-    public static void RunTestsFromEditor() {
-        
+    [MenuItem("Assets/Tests/Run Selected")]
+    public static void RunSelectedTestFromEditor() {
+        var typesToTest = new List<Type>();
+        if (null != Selection.objects) {
+            foreach (var obj in Selection.objects) {
+                var script = obj as MonoScript;
+                if (null != script) {
+                    var type = script.GetClass();
+                    if (null == type) {
+                        Debug.LogWarning("Can't GetClass() from MonoScript with mismatched file and fully qualified class names", script);
+                        continue;
+                    }
+                    typesToTest.Add(type);
+                }
+            }
+        }
+
+        var results = TestRunner.RunAllTestsInTypes(typesToTest);
+
+        ProcessTestResults(results);
+    }
+
+    [MenuItem("Assets/Tests/Run All")]
+    public static void RunAllTestsFromEditor() {
         var results = TestRunner.RunAllTests();
 
+        ProcessTestResults(results);
+    }
+
+
+    private static void ProcessTestResults(TestRunner.ExecutionResults results)
+    {
         Debug.Log("Executed " + results.TotalTestsRun + " tests");
 
         if (results.Failures.Any() == false) {

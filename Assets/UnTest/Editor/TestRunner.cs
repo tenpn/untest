@@ -156,22 +156,36 @@ public class TestRunner {
             testableAssembly => assembly.FullName.Contains(testableAssembly)));
     }
 
+    private static ExecutionResults RunAllTestsInSuites(
+        IEnumerable<Type> testSuites) {
+
+            var failures = new List<TestFailure>();
+
+            int totalTestsRun = 0;
+            foreach (var testSuite in testSuites)
+            {
+
+                totalTestsRun += RunTestsInSuite(testSuite, failures);
+            }
+
+            return new ExecutionResults
+            {
+                TotalTestsRun = totalTestsRun,
+                Failures = failures
+            };
+    }
+
+    public static ExecutionResults RunAllTestsInTypes(
+        IEnumerable<Type> typesToTest)
+    {
+
+        return RunAllTestsInSuites(FindAllTestSuites(typesToTest));
+    }
+
     public static ExecutionResults RunAllTestsInAssemblies(
         IEnumerable<Assembly> assembliesToTest) {
-        
-		
-		var failures = new List<TestFailure>();
 
-		int totalTestsRun = 0;
-		foreach(var testSuite in FindAllTestSuites(assembliesToTest)) {
-
-			totalTestsRun += RunTestsInSuite(testSuite, failures);
-		}
-
-		return new ExecutionResults  {
-			TotalTestsRun = totalTestsRun,
-			Failures = failures
-		};
+        return RunAllTestsInSuites(FindAllTestSuites(assembliesToTest));
     }
 
     public static IEnumerable<TestFailureMessage> CalculateFailureString(
@@ -220,11 +234,14 @@ public class TestRunner {
 
         return testableAssemblies.SelectMany(assembly => FindAllTestSuites(assembly));
     }
-
     private static IEnumerable<Type> FindAllTestSuites(
         Assembly assemblyToTest) {
+            return FindAllTestSuites(assemblyToTest.GetTypes());
+    }
+
+    private static IEnumerable<Type> FindAllTestSuites(
+        IEnumerable<Type> allTypes) {
     
-        var allTypes = assemblyToTest.GetTypes();
         foreach(var type in allTypes) {
 
             try {
