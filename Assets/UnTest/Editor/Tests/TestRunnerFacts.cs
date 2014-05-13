@@ -17,8 +17,10 @@ namespace UnTest.Tests {
             
             public static int BaseSetupRuns = 0;
             public static int BaseTestRuns = 0;
+            public static int BaseTeardownRuns = 0;
 
             [TestSetup] public virtual void Setup() { ++BaseSetupRuns; }
+            [TestTeardown] public virtual void Teardown() { ++BaseTeardownRuns; }
 
             [Test] public void Test1() { ++BaseTestRuns; }
             [Test] public void Test2() { ++BaseTestRuns; }
@@ -42,6 +44,7 @@ namespace UnTest.Tests {
         [TestSetup]
         void Setup() {
             MockBaseTestSuite.BaseSetupRuns = 0;
+            MockBaseTestSuite.BaseTeardownRuns = 0;
             MockBaseTestSuite.BaseTestRuns = 0;
             MockDerivedTestSuite.DerivedSetupRuns = 0;
             MockDerivedTestSuite.DerivedTestRuns = 0;
@@ -56,6 +59,9 @@ namespace UnTest.Tests {
                 typeof(MockBaseTestSuite).GetMethod("Setup"),
             };
 
+            var teardowns = new MethodInfo[] { 
+            };
+
             var tests = new MethodBase[] { 
                 typeof(MockBaseTestSuite).GetMethod("Test1"),
                 typeof(MockBaseTestSuite).GetMethod("Test2"),
@@ -64,9 +70,33 @@ namespace UnTest.Tests {
 
             var testInstance = new MockBaseTestSuite();
 
-            TestRunner.RunTestsInSuite(testInstance, failures, setups, tests);
+            TestRunner.RunTestsInSuite(testInstance, failures, setups, teardowns, tests);
 
             Assert.IsEqual(MockBaseTestSuite.BaseSetupRuns, 3);
+        }
+
+        [Test]
+        void RunTestsInSuite_SuiteWithSetupAndTests_RunsTeardownAfterEachTest() {
+            var failures = new List<TestRunner.TestFailure>();
+         
+            var setups = new MethodInfo[] { 
+            };
+
+            var teardowns = new MethodInfo[] { 
+                typeof(MockBaseTestSuite).GetMethod("Teardown"),
+            };
+
+            var tests = new MethodBase[] { 
+                typeof(MockBaseTestSuite).GetMethod("Test1"),
+                typeof(MockBaseTestSuite).GetMethod("Test2"),
+                typeof(MockBaseTestSuite).GetMethod("Test3"),
+            };
+
+            var testInstance = new MockBaseTestSuite();
+
+            TestRunner.RunTestsInSuite(testInstance, failures, setups, teardowns, tests);
+
+            Assert.IsEqual(MockBaseTestSuite.BaseTeardownRuns, 3);
         }
 
         [Test]
@@ -77,6 +107,16 @@ namespace UnTest.Tests {
             TestRunner.RunTestsInSuite(typeof(MockDerivedTestSuite), failures);
 
             Assert.IsEqual(MockBaseTestSuite.BaseSetupRuns, 3);
+        }
+
+        [Test]
+        void RunTestsInSuite_SuiteWithDifferentlyNamedBaseSetup_RunsTeardownFromBase() {
+            
+            var failures = new List<TestRunner.TestFailure>();
+
+            TestRunner.RunTestsInSuite(typeof(MockDerivedTestSuite), failures);
+
+            Assert.IsEqual(MockBaseTestSuite.BaseTeardownRuns, 3);
         }
 
         [Test]

@@ -78,14 +78,21 @@ public class TestRunner {
                       .Where(m => m.GetCustomAttributes(false).Any(
                                  att => att.GetType().Name == typeof(TestSetup).Name)));
 
+        var teardownMethods = new List<MethodInfo>();
+        teardownMethods
+            .AddRange(testSuite.GetMethods(methodSearch)
+                      .Where(m => m.GetCustomAttributes(false).Any(
+                                 att => att.GetType().Name == typeof(TestTeardown).Name)));
+
         var chainType = testSuite.BaseType;
         while(chainType != null) {
             var chainSetups = chainType.GetMethods(
                 BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)
-                .Where(m => m.GetCustomAttributes(false).Any(
-                           att => att.GetType().Name == typeof(TestSetup).Name))
                 .Where(m => m.IsVirtual == false);
-            setupMethods.AddRange(chainSetups);
+            setupMethods.AddRange(chainSetups.Where(m => m.GetCustomAttributes(false).Any(
+                           att => att.GetType().Name == typeof(TestSetup).Name)));
+            teardownMethods.AddRange(chainSetups.Where(m => m.GetCustomAttributes(false).Any(
+                           att => att.GetType().Name == typeof(TestTeardown).Name)));
             chainType = chainType.BaseType;
         }
 
@@ -93,22 +100,24 @@ public class TestRunner {
             .Where(m => m.GetCustomAttributes(false).Any(att => att.GetType().Name == typeof(Test).Name))
             .ToArray();
 
-        return RunTestsInSuite(testSuite, failureList, setupMethods, testMethods);
+        return RunTestsInSuite(testSuite, failureList, setupMethods, teardownMethods, testMethods);
     }
 
     // returns number of found tests
     public static int RunTestsInSuite(Type testSuite, List<TestFailure> failureList, 
                                       IEnumerable<MethodInfo> setupMethods,
+                                      IEnumerable<MethodInfo> teardownMethods,
                                       IEnumerable<MethodBase> testMethods) {
         
         var instance = Activator.CreateInstance(testSuite);
 
-        return RunTestsInSuite(instance, failureList, setupMethods, testMethods);
+        return RunTestsInSuite(instance, failureList, setupMethods, teardownMethods, testMethods);
     }
 
     // returns number of found tests
     public static int RunTestsInSuite(Object suiteInstance, List<TestFailure> failureList, 
                                       IEnumerable<MethodInfo> setupMethods,
+                                      IEnumerable<MethodInfo> teardownMethods,
                                       IEnumerable<MethodBase> testMethods) {
         
         foreach(var test in testMethods) {
@@ -135,6 +144,10 @@ public class TestRunner {
                     LineNumber = testFrame.GetFileLineNumber(),
                     ColumnNumber = testFrame.GetFileColumnNumber(),
                 });
+            }
+
+            foreach(var teardownMethod in teardownMethods) {
+                teardownMethod.Invoke(suiteInstance, null);
             }
             
         }
